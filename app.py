@@ -23,10 +23,10 @@ def get_all_cities():
 
         city_name = city_link.text.strip()
 
-        if city_name == "tel-aviv":
+        if city_name == "Tel Aviv":
             continue
 
-        all_cities.append(city_name)
+        all_cities.append(city_link.get("href"))
 
     return all_cities
 
@@ -53,8 +53,8 @@ def handle_local_links(url, link):
 ## go ahead and visit every site and get the data
 
 if __name__ == "__main__":
-    cities = get_all_cities()
-    print(cities)
+    cities_urls = get_all_cities()
+    # print(cities_urls)
 
 
 ## Get the list of cities
