@@ -3,3 +3,4 @@ ENV__*
 __pycache__
 .DS_Store
 
+*.pkl
