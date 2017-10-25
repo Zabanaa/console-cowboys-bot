@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 import os, logging, multiprocessing, requests, pickle, sys, random
 from bs4 import BeautifulSoup
-from helpers import soupify_website, extract_city_name
+import helpers
 
 # Scrape All Lists for every city
 # save that into a pickle
@@ -9,7 +9,12 @@ from helpers import soupify_website, extract_city_name
 # For every city, visit every site and check that they have a jobs section
 
 def get_startup_list_for_a_city(url):
-    site_data       = soupify_website(url)
+
+    city            = helpers.extract_city_name(url)
+
+    print("Getting data for {}".format(city))
+
+    site_data       = helpers.soupify_website(url)
     links           = site_data.find_all("a", class_="main_link")
     startup_list    = []
 
@@ -25,10 +30,13 @@ def get_startup_list_for_a_city(url):
 
         startup_list.append(startup_info)
 
-    file_name       = extract_city_name(url)
+    file_name       = helpers.set_file_name_to_city_name(city)
+    file_path       = os.path.join(os.getcwd()+"/startups_info", file_name)
 
-    with open(file_name, "wb") as startups_file:
+    with open(file_path, "wb") as startups_file:
         pickle.dump(startup_list, startups_file)
+
+    print("Done fetching data for {}".format(city))
 
 def get_all_cities():
 
