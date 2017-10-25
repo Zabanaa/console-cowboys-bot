@@ -55,9 +55,6 @@ def get_all_cities():
     with open("cities_urls.pkl", "wb") as cities_urls_output:
         pickle.dump(all_cities, cities_urls_output)
 
-def handle_local_links(url, link):
-    # if link is local, prepend the url, else return the link as is
-    pass
 
 ## for each pickle file (aka each city)
 ## go ahead and visit every site and get the data
@@ -76,9 +73,7 @@ if __name__ == "__main__":
     print("Urls loaded !")
 
     with multiprocessing.Pool() as pool:
-        print("Getting info for atlanta")
-        result = pool.map(get_startup_list_for_a_city, ["http://atlanta.startups-list.com"])
-
+        result = pool.map(get_startup_list_for_a_city, cities_urls)
 
 ## // Do this in a multiprocessing pool
 ## For each city in the list
