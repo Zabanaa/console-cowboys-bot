@@ -1,15 +1,34 @@
-import os, logging, multiprocessing, requests, pickle
+from urllib.parse import urlparse
+import os, logging, multiprocessing, requests, pickle, sys, random
 from bs4 import BeautifulSoup
+from helpers import soupify_website, extract_city_name
 
 # Scrape All Lists for every city
 # save that into a pickle
 # then at runtime do an if check on the presence of a pickle file
 # For every city, visit every site and check that they have a jobs section
 
-def get_startups_list_for_a_city(url):
-    site_data = soupify_website(url)
-    print(site_data)
-    return site_data
+def get_startup_list_for_a_city(url):
+    site_data       = soupify_website(url)
+    links           = site_data.find_all("a", class_="main_link")
+    startup_list    = []
+
+    for link in links:
+
+        startup_url = link.get("href")
+        startup_name = link.find("h1").text
+
+        startup_info = {
+            "name": startup_name.strip(),
+            "url": startup_url.strip(),
+        }
+
+        startup_list.append(startup_info)
+
+    file_name       = extract_city_name(url)
+
+    with open(file_name, "wb") as startups_file:
+        pickle.dump(startup_list, startups_file)
 
 def get_all_cities():
 
@@ -36,21 +55,6 @@ def get_all_cities():
     with open("cities_urls.pkl", "wb") as cities_urls_output:
         pickle.dump(all_cities, cities_urls_output)
 
-# 1. Scrape the list of cities and add them to a pickle object
-
-def soupify_website(site_url):
-    sauce = requests.get(site_url, timeout=20).text
-    return BeautifulSoup(sauce, "html.parser")
-
-# def get_startups_list(city):
-
-#     ## go and fetch the list at city.startups-list.com
-#     ## once there turn that into a soup
-#     site_url = "{}.startups-list.com".format(city)
-#     soup = soupify_website(site_url)
-#     # save the list of links to its own pickle file
-#     pass
-
 def handle_local_links(url, link):
     # if link is local, prepend the url, else return the link as is
     pass
@@ -60,11 +64,21 @@ def handle_local_links(url, link):
 
 if __name__ == "__main__":
 
+    sys.setrecursionlimit(1000)
+
     if not os.path.exists(os.path.join(os.getcwd(), "cities_urls.pkl")):
         get_all_cities()
 
+    print("Found cities_urls.pkl, proceeding to load the data ...")
     with open("cities_urls.pkl", "rb") as cities_urls_file:
         cities_urls = pickle.load(cities_urls_file)
+
+    print("Urls loaded !")
+
+    with multiprocessing.Pool() as pool:
+        print("Getting info for atlanta")
+        result = pool.map(get_startup_list_for_a_city, ["http://atlanta.startups-list.com"])
+
 
 ## // Do this in a multiprocessing pool
 ## For each city in the list
