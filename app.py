@@ -1,10 +1,15 @@
-import os, logging, multiprocessing, requests
+import os, logging, multiprocessing, requests, pickle
 from bs4 import BeautifulSoup
 
 # Scrape All Lists for every city
 # save that into a pickle
 # then at runtime do an if check on the presence of a pickle file
 # For every city, visit every site and check that they have a jobs section
+
+def get_startups_list_for_a_city(url):
+    site_data = soupify_website(url)
+    print(site_data)
+    return site_data
 
 def get_all_cities():
 
@@ -28,7 +33,8 @@ def get_all_cities():
 
         all_cities.append(city_link.get("href"))
 
-    return all_cities
+    with open("cities_urls.pkl", "wb") as cities_urls_output:
+        pickle.dump(all_cities, cities_urls_output)
 
 # 1. Scrape the list of cities and add them to a pickle object
 
@@ -53,11 +59,12 @@ def handle_local_links(url, link):
 ## go ahead and visit every site and get the data
 
 if __name__ == "__main__":
-    cities_urls = get_all_cities()
-    # print(cities_urls)
 
+    if not os.path.exists(os.path.join(os.getcwd(), "cities_urls.pkl")):
+        get_all_cities()
 
-## Get the list of cities
+    with open("cities_urls.pkl", "rb") as cities_urls_file:
+        cities_urls = pickle.load(cities_urls_file)
 
 ## // Do this in a multiprocessing pool
 ## For each city in the list
