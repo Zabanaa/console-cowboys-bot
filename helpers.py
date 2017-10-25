@@ -5,7 +5,11 @@ from bs4 import BeautifulSoup
 
 def extract_city_name(url):
     full_url = urlparse(url)
-    file_name = "{}.pkl".format(full_url.hostname.split(".")[0])
+    city_name = full_url.hostname.split(".")[0]
+    return city_name
+
+def set_file_name_to_city_name(city_name):
+    file_name = "{}.pkl".format(city_name)
     return file_name
 
 def soupify_website(site_url):
