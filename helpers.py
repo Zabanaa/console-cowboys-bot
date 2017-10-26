@@ -25,6 +25,7 @@ def extract_city_name(url):
 
     return city_name
 
+
 def set_file_name_to_city_name(city_name):
     file_name = "{}.pkl".format(city_name)
     return file_name
@@ -44,9 +45,6 @@ def remove_trailing_slash(url):
     clean_url   = re.sub("\/$", "", url)
     return clean_url
 
+
 def directory_exists(dir_name, path):
     return os.path.isdir(os.path.join(path, dir_name))
-
-# for filename in os.listdir(os.path.join(os.getcwd(), "startups_info")):
-#     print(filename)
-
