@@ -4,11 +4,6 @@ import pickle
 import sys
 import helpers
 
-# Scrape All Lists for every city
-# save that into a pickle
-# then at runtime do an if check on the presence of a pickle file
-# For every city, visit every site and check that they have a jobs section
-
 
 def get_startup_list_for_a_city(url):
 
@@ -86,11 +81,7 @@ if __name__ == "__main__":
         result = pool.map(get_startup_list_for_a_city, cities_urls)
 
 # // Do this in a multiprocessing pool
-# For each city in the list
-# Go and Grab the list of startups
-
-# // Do this in a multiprocessing pool
-# put em in their own pickle file
 # for each pickle file
-    # visit every site and check if they have career pages
-    # if they do, find the job link and add it to the mongo DB
+    # visit every site and check if they have a careers pages
+    # if they do, visit the page and find the job link and add
+    # it to the mongo DB
