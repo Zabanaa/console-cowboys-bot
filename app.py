@@ -5,6 +5,10 @@ import sys
 import helpers
 
 
+def scrape_startup_site(startup_info):
+    print("{} - {}".format(startup_info["name"], startup_info["location"]))
+
+
 def get_startup_list_for_a_city(url):
 
     city            = helpers.extract_city_name(url)
@@ -13,16 +17,29 @@ def get_startup_list_for_a_city(url):
 
     site_data       = helpers.soupify_website(url)
     links           = site_data.find_all("a", class_="main_link")
+    invalid_domains = ["instagram", "twitter", "facebook", ".gov",
+                       "diagrams", "play.google.com", "hulshare",
+                       "bing", " ", "none", "angel", "linkedin",
+                       "mylanderpages", "mtv", "null", "imdb", "pennygrabber",
+                       "amazon", "youtube", "homedepot", "indiegogo",
+                       "wordpress", "itunes"]
     startup_list    = []
 
     for link in links:
 
-        startup_url     = link.get("href")
-        startup_name    = link.find("h1").text
+        startup_url     = link.get("href").strip().lower()
+        startup_name    = link.find("h1").text.strip().lower()
+
+        if startup_url is None or startup_url == "":
+            continue
+
+        if any(domain in startup_url for domain in invalid_domains):
+            continue
 
         startup_info    = {
-            "name": startup_name.strip(),
-            "url": startup_url.strip(),
+            "name": startup_name,
+            "url": helpers.remove_trailing_slash(startup_url),
+            "location": city,
         }
 
         startup_list.append(startup_info)
@@ -61,9 +78,6 @@ def get_all_cities():
         pickle.dump(all_cities, cities_urls_output)
 
 
-# for each pickle file (aka each city)
-# go ahead and visit every site and get the data
-
 if __name__ == "__main__":
 
     sys.setrecursionlimit(1000)
@@ -77,11 +91,30 @@ if __name__ == "__main__":
 
     print("Urls loaded !")
 
-    with multiprocessing.Pool() as pool:
-        result = pool.map(get_startup_list_for_a_city, cities_urls)
+    if not helpers.directory_exists("startups_info", os.getcwd()):
 
-# // Do this in a multiprocessing pool
-# for each pickle file
-    # visit every site and check if they have a careers pages
-    # if they do, visit the page and find the job link and add
-    # it to the mongo DB
+        print("Creating startups_info directory")
+        os.mkdir(os.path.join(os.getcwd(), "startups_info"))
+        print("startups_info directory created")
+
+        with multiprocessing.Pool() as pool:
+            print("Fetching startup list for all cities ...")
+            result = pool.map(get_startup_list_for_a_city, cities_urls)
+
+        print("Done !")
+
+    print("Found startup directory ... Loading filenames ...")
+    startup_pkl_files = os.listdir(os.path.join(os.getcwd(), "startups_info"))
+    startup_filenames   = [file for file in startup_pkl_files]
+
+    for filename in startup_filenames:
+
+        file_path = os.path.join(os.getcwd(), "startups_info", filename)
+
+        with open(file_path, "rb") as startup_info_file:
+            startup_list = pickle.load(startup_info_file)
+
+        with multiprocessing.Pool() as pool:
+            pool.map(scrape_startup_site, startup_list)
+
+    print("Done!")
