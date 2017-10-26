@@ -1,4 +1,6 @@
 from urllib.parse import urlparse
+import re
+import os
 
 import requests
 from bs4 import BeautifulSoup
@@ -7,8 +9,21 @@ from bs4 import BeautifulSoup
 def extract_city_name(url):
     full_url = urlparse(url)
     city_name = full_url.hostname.split(".")[0]
-    return city_name
 
+    if "nyc" in city_name:
+        city_name = "new-york"
+    elif "mtl" in city_name:
+        city_name = "montreal"
+    elif "startupsla" in city_name:
+        city_name = "los-angeles"
+    elif "boston" in city_name:
+        city_name = "boston"
+    elif "chicago" in city_name:
+        city_name = "chicago"
+    elif "boulder" in city_name:
+        city_name = "boulder"
+
+    return city_name
 
 def set_file_name_to_city_name(city_name):
     file_name = "{}.pkl".format(city_name)
@@ -25,6 +40,13 @@ def handle_local_links(url, link):
     pass
 
 
-def cleanup_startup_url(url):
-    # find the traling slash and remove it
-    pass
+def remove_trailing_slash(url):
+    clean_url   = re.sub("\/$", "", url)
+    return clean_url
+
+def directory_exists(dir_name, path):
+    return os.path.isdir(os.path.join(path, dir_name))
+
+# for filename in os.listdir(os.path.join(os.getcwd(), "startups_info")):
+#     print(filename)
+
