@@ -5,8 +5,42 @@ import sys
 import helpers
 
 
-def scrape_startup_site(startup_info):
-    print("{} - {}".format(startup_info["name"], startup_info["location"]))
+from termcolor import colored
+
+def check_startup_for_open_jobs(startup_info):
+
+    startup_name     = startup_info["name"]
+    startup_url      = startup_info["url"]
+    location         = startup_info["location"]
+    hiring_file_name = "hiring_{}.pkl".format(location)
+    pkl_dir_path     = os.path.join(os.getcwd(), "startups_info")
+    hiring_file_path = os.path.join(pkl_dir_path, hiring_file_name)
+
+    try:
+        site_data = helpers.soupify_website(startup_url)
+    except Exception as e:
+        print(colored(e, "red"))
+    else:
+        # check if startup has a jobs page
+        print("{} - {}".format(startup_name, location))
+        links = [link.get("href") for link in site_data.find_all("a")]
+
+        has_jobs_page, jobs_page_url = helpers.startup_has_jobs_page(links)
+
+        if has_jobs_page:
+            jobs_page = helpers.handle_local_links(startup_url, jobs_page_url)
+            startup_info["jobs_page"] = jobs_page
+
+            print(colored("{} is hiring. More info at {}".format(
+                startup_name,
+                startup_info["jobs_page"]
+            ), "green"))
+
+            with open(hiring_file_path, "wb") as file:
+                pickle.dump(startup_info, file)
+
+        else:
+            return False
 
 
 def get_startup_list_for_a_city(url):
@@ -115,6 +149,15 @@ if __name__ == "__main__":
             startup_list = pickle.load(startup_info_file)
 
         with multiprocessing.Pool() as pool:
-            pool.map(scrape_startup_site, startup_list)
+            pool.map(check_startup_for_open_jobs, startup_list)
+
+    # for each hiring_startups file
+        # in a multiprocessing pool
+        # scrape every job page and get every link that satisfies the condition
+        # ie do they match our list of keywords
+        # startup_info["job_listing_urls"] = [link1, link2 etc]
 
     print("Done!")
+    # scrape_startup_site({"name": "ginger.io",
+    #                      "location": "sf",
+    #                      "url": "https://ginger.io"})
