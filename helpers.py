@@ -26,19 +26,41 @@ def extract_city_name(url):
     return city_name
 
 
+def startup_has_jobs_page(links):
+
+    keywords = ["careers", "jobs", "join-us",
+                "work-for-us", "work-with-us",
+                "join-the-team", "hiring"]
+
+    for link in links:
+
+        if link is not None and any(keyword in link for keyword in keywords):
+            return True, link
+        else:
+            continue
+    else:
+        return False, None
+
+
 def set_file_name_to_city_name(city_name):
     file_name = "{}.pkl".format(city_name)
     return file_name
 
 
 def soupify_website(site_url):
-    sauce = requests.get(site_url, timeout=20).text
-    return BeautifulSoup(sauce, "html.parser")
+    try:
+        sauce = requests.get(site_url, timeout=5).text
+    except requests.exceptions.RequestException as e:
+        raise Exception("Couldn't load {}".format(site_url))
+    else:
+        return BeautifulSoup(sauce, "html.parser")
 
 
 def handle_local_links(url, link):
     # if link is local, prepend the url, else return the link as is
-    pass
+    if link.startswith("/"):
+        link = url + link
+    return link
 
 
 def remove_trailing_slash(url):
@@ -48,3 +70,19 @@ def remove_trailing_slash(url):
 
 def directory_exists(dir_name, path):
     return os.path.isdir(os.path.join(path, dir_name))
+
+
+def extract_job_links(url):
+
+    site_data = soupify_website(url)
+    keywords  = ["python", "nodejs", "node.js", "django", "flask",
+                 "full stack", "fullstack", "full stack", "backend",
+                 "back end", "back-end", "software developer",
+                 "software engineer", "rust", "ruby", "golang", "c++",
+                 "devops", "swift", "android", "kotlin", "scala", "java",
+                 "php", "laravel"]
+
+    links = [print(link) for link in site_data.find_all("a")]
+
+
+extract_job_links("http://notablelabs.com/careers")
