@@ -43,6 +43,13 @@ def check_startup_for_open_jobs(startup_info):
             return False
 
 
+def get_all_jobs_links(startup_info):
+    jobs_page   = startup_info["jobs_page"]
+    jobs_links  = helpers.extract_job_links(jobs_page)
+    startup_info["job_listing_urls"] = jobs_links
+    return startup_info
+
+
 def get_startup_list_for_a_city(url):
 
     city            = helpers.extract_city_name(url)
