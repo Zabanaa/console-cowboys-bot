@@ -58,8 +58,14 @@ def soupify_website(site_url):
 
 def handle_local_links(url, link):
     # if link is local, prepend the url, else return the link as is
+    pattern = re.compile(r"https?://[a-zA-Z0-9-.]*\.[a-zA-Z]+")
+    main_url     = pattern.findall(url)[0]
+
     if link.startswith("/"):
-        link = url + link
+        link = main_url + link
+
+    if not link.startswith("/") and not link.startswith("http"):
+        link = main_url + "/" + link
     return link
 
 
@@ -72,7 +78,7 @@ def directory_exists(dir_name, path):
     return os.path.isdir(os.path.join(path, dir_name))
 
 
-def extract_job_links(url):
+def extract_jobs(url):
 
     site_data = soupify_website(url)
     keywords  = ["python", "nodejs", "node.js", "django", "flask",
@@ -80,9 +86,19 @@ def extract_job_links(url):
                  "back end", "back-end", "software developer",
                  "software engineer", "rust", "ruby", "golang", "c++",
                  "devops", "swift", "android", "kotlin", "scala", "java",
-                 "php", "laravel"]
+                 "php", "laravel", "web engineer", "engineering manager", "ios"
+                 "it specialist", "api developer", "api engineer"]
 
-    links = [print(link) for link in site_data.find_all("a")]
+    jobs = []
 
+    for link in site_data.find_all("a"):
+        if link.text is not None and any(
+            keyword in link.text.lower() for keyword in keywords
+        ):
+            job_link = handle_local_links(url, link.get("href"))
+            jobs.append({
+                "title": link.text,
+                "url": job_link,
+            })
 
-extract_job_links("http://notablelabs.com/careers")
+    return jobs
