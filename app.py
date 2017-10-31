@@ -15,8 +15,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-from termcolor import colored
-
 def check_startup_for_open_jobs(startup_info):
 
     startup_name     = startup_info["name"]
