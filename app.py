@@ -3,6 +3,16 @@ import multiprocessing
 import pickle
 import sys
 import helpers
+import logging
+
+logger = logging.getLogger("main")
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler("startups.log")
+formatter    = logging.Formatter(
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 
 from termcolor import colored
@@ -19,10 +29,9 @@ def check_startup_for_open_jobs(startup_info):
     try:
         site_data = helpers.soupify_website(startup_url)
     except Exception as e:
-        print(colored(e, "red"))
+        logger.error(e)
     else:
         # check if startup has a jobs page
-        print("{} - {}".format(startup_name, location))
         links = [link.get("href") for link in site_data.find_all("a")]
 
         has_jobs_page, jobs_page_url = helpers.startup_has_jobs_page(links)
@@ -31,10 +40,10 @@ def check_startup_for_open_jobs(startup_info):
             jobs_page = helpers.handle_local_links(startup_url, jobs_page_url)
             startup_info["jobs_page"] = jobs_page
 
-            print(colored("{} is hiring. More info at {}".format(
+            logger.info("{} is hiring. More info at {}".format(
                 startup_name,
                 startup_info["jobs_page"]
-            ), "green"))
+            ))
 
             with open(hiring_file_path, "wb") as file:
                 pickle.dump(startup_info, file)
@@ -54,7 +63,6 @@ def get_startup_list_for_a_city(url):
 
     city            = helpers.extract_city_name(url)
 
-    print("Getting data for {}".format(city))
 
     site_data       = helpers.soupify_website(url)
     links           = site_data.find_all("a", class_="main_link")
@@ -91,8 +99,6 @@ def get_startup_list_for_a_city(url):
     with open(file_path, "wb") as startups_file:
         pickle.dump(startup_list, startups_file)
 
-    print("Done fetching data for {}".format(city))
-
 
 def get_all_cities():
 
@@ -126,25 +132,23 @@ if __name__ == "__main__":
     if not os.path.exists(os.path.join(os.getcwd(), "cities_urls.pkl")):
         get_all_cities()
 
-    print("Found cities_urls.pkl, proceeding to load the data ...")
+    logger.info("Found cities_urls.pkl, proceeding to load the data ...")
     with open("cities_urls.pkl", "rb") as cities_urls_file:
         cities_urls = pickle.load(cities_urls_file)
 
-    print("Urls loaded !")
+    logger.info("Urls loaded !")
 
     if not helpers.directory_exists("startups_info", os.getcwd()):
 
-        print("Creating startups_info directory")
+        logger.info("Creating startups_info directory")
         os.mkdir(os.path.join(os.getcwd(), "startups_info"))
-        print("startups_info directory created")
+        logger.info("startups_info directory created")
 
         with multiprocessing.Pool() as pool:
-            print("Fetching startup list for all cities ...")
+            logger.info("Fetching startup list for all cities ...")
             result = pool.map(get_startup_list_for_a_city, cities_urls)
 
-        print("Done !")
-
-    print("Found startup directory ... Loading filenames ...")
+    logger.info("Found startup directory ... Loading filenames ...")
     startup_pkl_files = os.listdir(os.path.join(os.getcwd(), "startups_info"))
     startup_filenames   = [file for file in startup_pkl_files]
 
@@ -163,8 +167,3 @@ if __name__ == "__main__":
         # scrape every job page and get every link that satisfies the condition
         # ie do they match our list of keywords
         # startup_info["job_listing_urls"] = [link1, link2 etc]
-
-    print("Done!")
-    # scrape_startup_site({"name": "ginger.io",
-    #                      "location": "sf",
-    #                      "url": "https://ginger.io"})
