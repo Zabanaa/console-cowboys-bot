@@ -144,14 +144,15 @@ if __name__ == "__main__":
         os.mkdir(os.path.join(os.getcwd(), "startups_info"))
         logger.info("startups_info directory created")
 
+        logger.info("Fetching startup list for all cities ...")
         with multiprocessing.Pool() as pool:
-            logger.info("Fetching startup list for all cities ...")
             result = pool.map(get_startup_list_for_a_city, cities_urls)
 
     logger.info("Found startup directory ... Loading filenames ...")
     startup_pkl_files = os.listdir(os.path.join(os.getcwd(), "startups_info"))
     startup_filenames   = [file for file in startup_pkl_files]
 
+    logger.info("Checking startups for open jobs ...")
     for filename in startup_filenames:
 
         file_path = os.path.join(os.getcwd(), "startups_info", filename)
