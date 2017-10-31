@@ -52,7 +52,7 @@ def soupify_website(site_url):
     try:
         sauce = requests.get(site_url, timeout=5).text
     except requests.exceptions.RequestException as e:
-        raise logger.error("Couldn't load {}".format(site_url))
+        raise Exception("Couldn't load {}".format(site_url))
     else:
         return BeautifulSoup(sauce, "html.parser")
 
