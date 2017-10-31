@@ -161,6 +161,7 @@ if __name__ == "__main__":
         with multiprocessing.Pool() as pool:
             pool.map(check_startup_for_open_jobs, startup_list)
 
+    logger.info("Done checking startups for open jobs")
     # for each hiring_startups file
         # in a multiprocessing pool
         # scrape every job page and get every link that satisfies the condition
