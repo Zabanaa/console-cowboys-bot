@@ -1,5 +1,4 @@
 from urllib.parse import urlparse
-from app import logger
 import re
 import os
 
