@@ -15,7 +15,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-def check_startup_for_open_jobs(startup_info):
+def save_hiring_startup(startup_info):
 
     startup_name     = startup_info["name"]
     startup_url      = startup_info["url"]
@@ -43,7 +43,7 @@ def check_startup_for_open_jobs(startup_info):
                 startup_info["jobs_page"]
             ))
 
-            with open(hiring_file_path, "wb") as file:
+            with open(hiring_file_path, "ab") as file:
                 pickle.dump(startup_info, file)
 
         else:
@@ -61,8 +61,8 @@ def get_startup_list_for_a_city(url):
 
     city            = helpers.extract_city_name(url)
 
-
     site_data       = helpers.soupify_website(url)
+
     links           = site_data.find_all("a", class_="main_link")
     invalid_domains = ["instagram", "twitter", "facebook", ".gov",
                        "diagrams", "play.google.com", "hulshare",
@@ -71,6 +71,8 @@ def get_startup_list_for_a_city(url):
                        "amazon", "youtube", "homedepot", "indiegogo",
                        "wordpress", "itunes"]
     startup_list    = []
+
+    logger.info("Fetching startups in {}".format(city))
 
     for link in links:
 
@@ -159,11 +161,11 @@ if __name__ == "__main__":
             startup_list = pickle.load(startup_info_file)
 
         with multiprocessing.Pool() as pool:
-            pool.map(check_startup_for_open_jobs, startup_list)
+            pool.map(save_hiring_startup, startup_list)
 
     logger.info("Done checking startups for open jobs")
     # for each hiring_startups file
-        # in a multiprocessing pool
-        # scrape every job page and get every link that satisfies the condition
-        # ie do they match our list of keywords
-        # startup_info["job_listing_urls"] = [link1, link2 etc]
+    # in a multiprocessing pool
+    # scrape every job page and get every link that satisfies the condition
+    # ie do they match our list of keywords
+    # startup_info["job_listing_urls"] = [link1, link2 etc]
