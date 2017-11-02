@@ -14,15 +14,22 @@ formatter    = logging.Formatter(
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+CWD = os.getcwd()
+STARTUPS_INFO_DIR = os.path.join(CWD, "startups_info")
+HIRING_STARTUPS_DIR = os.path.join(CWD, "hiring_startups")
+CITIES_URLS_FILE = os.path.join(CWD, "cities_urls.pkl")
+
 
 def save_hiring_startup(startup_info):
 
     startup_name     = startup_info["name"]
     startup_url      = startup_info["url"]
     location         = startup_info["location"]
-    hiring_file_name = "hiring_{}.pkl".format(location)
-    pkl_dir_path     = os.path.join(os.getcwd(), "startups_info")
-    hiring_file_path = os.path.join(pkl_dir_path, hiring_file_name)
+
+    hiring_file_path = os.path.join(
+                            HIRING_STARTUPS_DIR,
+                            "{}.pkl".format(location)
+                        )
 
     try:
         site_data = helpers.soupify_website(startup_url)
@@ -94,7 +101,7 @@ def get_startup_list_for_a_city(url):
         startup_list.append(startup_info)
 
     file_name       = helpers.set_file_name_to_city_name(city)
-    file_path       = os.path.join(os.getcwd()+"/startups_info", file_name)
+    file_path       = os.path.join(STARTUPS_INFO_DIR, file_name)
 
     with open(file_path, "wb") as startups_file:
         pickle.dump(startup_list, startups_file)
@@ -129,19 +136,19 @@ if __name__ == "__main__":
 
     sys.setrecursionlimit(1000)
 
-    if not os.path.exists(os.path.join(os.getcwd(), "cities_urls.pkl")):
+    if not os.path.exists(CITIES_URLS_FILE):
         get_all_cities()
 
     logger.info("Found cities_urls.pkl, proceeding to load the data ...")
-    with open("cities_urls.pkl", "rb") as cities_urls_file:
+    with open(CITIES_URLS_FILE, "rb") as cities_urls_file:
         cities_urls = pickle.load(cities_urls_file)
 
     logger.info("Urls loaded !")
 
-    if not helpers.directory_exists("startups_info"):
+    if not os.path.isdir(STARTUPS_INFO_DIR):
 
         logger.info("Creating startups_info directory")
-        os.mkdir(os.path.join(os.getcwd(), "startups_info"))
+        os.mkdir(STARTUPS_INFO_DIR)
         logger.info("startups_info directory created")
 
         logger.info("Fetching startup list for all cities ...")
@@ -149,19 +156,18 @@ if __name__ == "__main__":
             result = pool.map(get_startup_list_for_a_city, cities_urls)
 
     logger.info("Found startup_info directory. Loading filenames ...")
-    startup_pkl_files = os.listdir(os.path.join(os.getcwd(), "startups_info"))
-    startup_filenames   = [file for file in startup_pkl_files]
+    startup_filenames   = [file for file in STARTUPS_INFO_DIR]
 
-    if not helpers.directory_exists("hiring_startups"):
+    if not os.path.isdir(HIRING_STARTUPS_DIR):
         logger.info("Creating hiring_startups directory")
-        os.mkdir(os.path.join(os.getcwd(), "startups_info"))
+        os.mkdir(HIRING_STARTUPS_DIR)
         logger.info("startups_info directory created")
 
         logger.info("Checking startups for open jobs ...")
 
         for filename in startup_filenames:
 
-            file_path = os.path.join(os.getcwd(), "startups_info", filename)
+            file_path = os.path.join(STARTUPS_INFO_DIR, filename)
 
             with open(file_path, "rb") as startup_info_file:
                 startup_list = pickle.load(startup_info_file)
