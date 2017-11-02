@@ -74,8 +74,8 @@ def remove_trailing_slash(url):
     return clean_url
 
 
-def directory_exists(dir_name, path):
-    return os.path.isdir(os.path.join(path, dir_name))
+def directory_exists(dir_name):
+    return os.path.isdir(os.path.join(os.getcwd(), dir_name))
 
 
 def extract_jobs(url):
