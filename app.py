@@ -156,7 +156,7 @@ if __name__ == "__main__":
             result = pool.map(get_startup_list_for_a_city, cities_urls)
 
     logger.info("Found startup_info directory. Loading filenames ...")
-    startup_filenames   = [file for file in STARTUPS_INFO_DIR]
+    startup_filenames   = [file for file in os.listdir(STARTUPS_INFO_DIR)]
 
     if not os.path.isdir(HIRING_STARTUPS_DIR):
         logger.info("Creating hiring_startups directory")
