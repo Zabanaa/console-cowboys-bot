@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     logger.info("Urls loaded !")
 
-    if not helpers.directory_exists("startups_info", os.getcwd()):
+    if not helpers.directory_exists("startups_info"):
 
         logger.info("Creating startups_info directory")
         os.mkdir(os.path.join(os.getcwd(), "startups_info"))
@@ -148,21 +148,29 @@ if __name__ == "__main__":
         with multiprocessing.Pool() as pool:
             result = pool.map(get_startup_list_for_a_city, cities_urls)
 
-    logger.info("Found startup directory ... Loading filenames ...")
+    logger.info("Found startup_info directory. Loading filenames ...")
     startup_pkl_files = os.listdir(os.path.join(os.getcwd(), "startups_info"))
     startup_filenames   = [file for file in startup_pkl_files]
 
-    logger.info("Checking startups for open jobs ...")
-    for filename in startup_filenames:
+    if not helpers.directory_exists("hiring_startups"):
+        logger.info("Creating hiring_startups directory")
+        os.mkdir(os.path.join(os.getcwd(), "startups_info"))
+        logger.info("startups_info directory created")
 
-        file_path = os.path.join(os.getcwd(), "startups_info", filename)
+        logger.info("Checking startups for open jobs ...")
 
-        with open(file_path, "rb") as startup_info_file:
-            startup_list = pickle.load(startup_info_file)
+        for filename in startup_filenames:
 
-        with multiprocessing.Pool() as pool:
-            pool.map(save_hiring_startup, startup_list)
+            file_path = os.path.join(os.getcwd(), "startups_info", filename)
 
+            with open(file_path, "rb") as startup_info_file:
+                startup_list = pickle.load(startup_info_file)
+
+            with multiprocessing.Pool() as pool:
+                pool.map(save_hiring_startup, startup_list)
+
+    logger.info("Found hiring_startups directory. Loading files ...")
+    logger.info("Extracting jobs ... ")
     logger.info("Done checking startups for open jobs")
     # for each hiring_startups file
     # in a multiprocessing pool
