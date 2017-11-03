@@ -5,19 +5,19 @@ import sys
 import helpers
 import logging
 
-logger = logging.getLogger("main")
+logger          = logging.getLogger("main")
 logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler("startups.log")
-formatter    = logging.Formatter(
+file_handler    = logging.FileHandler("startups.log")
+formatter       = logging.Formatter(
                     "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 CWD = os.getcwd()
-STARTUPS_INFO_DIR = os.path.join(CWD, "startups_info")
+STARTUPS_INFO_DIR   = os.path.join(CWD, "startups_info")
 HIRING_STARTUPS_DIR = os.path.join(CWD, "hiring_startups")
-CITIES_URLS_FILE = os.path.join(CWD, "cities_urls.pkl")
+CITIES_URLS_FILE    = os.path.join(CWD, "cities_urls.pkl")
 
 
 def save_hiring_startup(startup_info):
@@ -53,15 +53,20 @@ def save_hiring_startup(startup_info):
             with open(hiring_file_path, "ab") as file:
                 pickle.dump(startup_info, file)
 
-        else:
-            return False
 
-
-def get_all_jobs_links(startup_info):
+def get_all_software_jobs_links(startup_info):
     jobs_page   = startup_info["jobs_page"]
-    jobs_links  = helpers.extract_job_links(jobs_page)
-    startup_info["job_listing_urls"] = jobs_links
-    return startup_info
+    jobs_links  = helpers.extract_software_job_links(jobs_page)
+    if len(jobs_links) > 0:
+        startup_info["job_listing_urls"] = jobs_links
+
+        logger.info(
+            "{} is hiring software devs in {}".format(
+                startup_info["name"],
+                startup_info["location"]
+            )
+        )
+        return startup_info
 
 
 def get_startup_list_for_a_city(url):
@@ -140,6 +145,7 @@ if __name__ == "__main__":
         get_all_cities()
 
     logger.info("Found cities_urls.pkl, proceeding to load the data ...")
+
     with open(CITIES_URLS_FILE, "rb") as cities_urls_file:
         cities_urls = pickle.load(cities_urls_file)
 
@@ -152,6 +158,7 @@ if __name__ == "__main__":
         logger.info("startups_info directory created")
 
         logger.info("Fetching startup list for all cities ...")
+
         with multiprocessing.Pool() as pool:
             result = pool.map(get_startup_list_for_a_city, cities_urls)
 
@@ -159,6 +166,7 @@ if __name__ == "__main__":
     startup_filenames   = [file for file in os.listdir(STARTUPS_INFO_DIR)]
 
     if not os.path.isdir(HIRING_STARTUPS_DIR):
+
         logger.info("Creating hiring_startups directory")
         os.mkdir(HIRING_STARTUPS_DIR)
         logger.info("startups_info directory created")
@@ -175,11 +183,44 @@ if __name__ == "__main__":
             with multiprocessing.Pool() as pool:
                 pool.map(save_hiring_startup, startup_list)
 
-    logger.info("Found hiring_startups directory. Loading files ...")
-    logger.info("Extracting jobs ... ")
     logger.info("Done checking startups for open jobs")
-    # for each hiring_startups file
-    # in a multiprocessing pool
-    # scrape every job page and get every link that satisfies the condition
-    # ie do they match our list of keywords
-    # startup_info["job_listing_urls"] = [link1, link2 etc]
+
+    logger.info("Found hiring_startups directory. Loading files ...")
+
+    hiring_startups_files = [file for file in os.listdir(HIRING_STARTUPS_DIR)]
+
+    logger.info("Extracting jobs ... ")
+
+
+    for filename in hiring_startups_files:
+
+        file_path = os.path.join(HIRING_STARTUPS_DIR, filename)
+
+        startups_with_open_jobs = []
+        startups_hiring_devs = []
+
+        with open(file_path, "rb") as hiring_startups_file:
+
+
+            while True:
+
+                try:
+                    startup = pickle.load(hiring_startups_file)
+                    startups_with_open_jobs.append(startup)
+                except EOFError as e:
+                    logger.info("Reached end of the file. {}".format(filename))
+                    break
+
+        with multiprocessing.Pool() as pool:
+            startups_hiring_devs = list(filter(
+                lambda x: x is not None,
+                pool.map(get_all_software_jobs_links, startups_with_open_jobs)
+            ))
+
+        print(startups_hiring_devs)
+        break
+        # cleanup all the None values
+        # insert many using pymongo
+        # print(filename, len(startups_hiring_devs))
+
+    logger.info("Finished")
