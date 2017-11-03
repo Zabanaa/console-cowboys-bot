@@ -217,6 +217,13 @@ if __name__ == "__main__":
                 pool.map(get_all_software_jobs_links, startups_with_open_jobs)
             ))
 
+            logger.info(
+                "Total number of startups hiring devs in {} - {}".format(
+                    filename.split(".")[0],
+                    len(startups_hiring_devs)
+                )
+            )
+
         # insert many using pymongo
         # print(filename, len(startups_hiring_devs))
 
