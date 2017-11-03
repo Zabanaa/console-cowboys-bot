@@ -184,9 +184,7 @@ if __name__ == "__main__":
 
     for filename in hiring_startups_files:
 
-        city = filename.split(".")[0]
-
-        logger.info("Building list of startups hiring devs in {}".format(city))
+        city = filename.split(".")[0].split("_")[1]
 
         file_path = os.path.join(HIRING_STARTUPS_DIR, filename)
 
@@ -197,12 +195,19 @@ if __name__ == "__main__":
 
             while True:
 
+                logger.info(
+                    "Loading list of startups with open jobs in {}".format(
+                        city
+                    )
+                )
                 try:
                     startup = pickle.load(hiring_startups_file)
                     startups_with_open_jobs.append(startup)
                 except EOFError as e:
-                    logger.info("Reached end of the file. {}".format(filename))
+                    logger.info("All {} startups loaded".format(city))
                     break
+
+        logger.info("Filtering {} startups for software jobs ...".format(city))
 
         with multiprocessing.Pool() as pool:
             startups_hiring_devs = list(filter(
@@ -212,7 +217,7 @@ if __name__ == "__main__":
 
             logger.info(
                 "Total number of startups hiring devs in {} - {}".format(
-                    filename.split(".")[0],
+                    city,
                     len(startups_hiring_devs)
                 )
             )
