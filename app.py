@@ -59,13 +59,6 @@ def get_all_software_jobs_links(startup_info):
     jobs_links  = helpers.extract_software_job_links(jobs_page)
     if len(jobs_links) > 0:
         startup_info["job_listing_urls"] = jobs_links
-
-        logger.info(
-            "{} is hiring software devs in {}".format(
-                startup_info["name"],
-                startup_info["location"]
-            )
-        )
         return startup_info
 
 
@@ -189,10 +182,11 @@ if __name__ == "__main__":
 
     hiring_startups_files = [file for file in os.listdir(HIRING_STARTUPS_DIR)]
 
-    logger.info("Extracting jobs ... ")
-
-
     for filename in hiring_startups_files:
+
+        city = filename.split(".")[0]
+
+        logger.info("Building list of startups hiring devs in {}".format(city))
 
         file_path = os.path.join(HIRING_STARTUPS_DIR, filename)
 
@@ -200,7 +194,6 @@ if __name__ == "__main__":
         startups_hiring_devs = []
 
         with open(file_path, "rb") as hiring_startups_file:
-
 
             while True:
 
