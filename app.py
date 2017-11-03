@@ -4,6 +4,7 @@ import pickle
 import sys
 import helpers
 import logging
+from db import connect, insert_jobs
 
 logger          = logging.getLogger("main")
 logger.setLevel(logging.INFO)
@@ -18,6 +19,12 @@ CWD = os.getcwd()
 STARTUPS_INFO_DIR   = os.path.join(CWD, "startups_info")
 HIRING_STARTUPS_DIR = os.path.join(CWD, "hiring_startups")
 CITIES_URLS_FILE    = os.path.join(CWD, "cities_urls.pkl")
+
+DB_HOST             = os.getenv("CONSOLE_COWBOYS_MONGO_HOST")
+DB_USER             = os.getenv("CONSOLE_COWBOYS_MONGO_USER")
+DB_PASS             = os.getenv("CONSOLE_COWBOYS_MONGO_PASS")
+DB_PORT             = os.getenv("CONSOLE_COWBOYS_MONGO_PORT")
+DB_NAME             = os.getenv("CONSOLE_COWBOYS_MONGO_NAME")
 
 
 def save_hiring_startup(startup_info):
@@ -182,6 +189,11 @@ if __name__ == "__main__":
 
     hiring_startups_files = [file for file in os.listdir(HIRING_STARTUPS_DIR)]
 
+    try:
+        db_conn = connect(DB_USER, DB_PASS, DB_HOST, int(DB_PORT), DB_NAME)
+    except Exception as e:
+        logger.info(e)
+
     for filename in hiring_startups_files:
 
         city = filename.split(".")[0].split("_")[1]
@@ -224,6 +236,9 @@ if __name__ == "__main__":
             )
 
         # insert many using pymongo
-        # print(filename, len(startups_hiring_devs))
+        jobs_inserted = insert_jobs(db_conn, startups_hiring_devs)
+        logger.info("Inserted {} jobs in the database".format(
+            len(jobs_inserted)
+        ))
 
     logger.info("Finished")
