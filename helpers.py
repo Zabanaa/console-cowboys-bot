@@ -74,9 +74,8 @@ def remove_trailing_slash(url):
     return clean_url
 
 
-def extract_jobs(url):
+def extract_software_job_links(url):
 
-    site_data = soupify_website(url)
     keywords  = ["python", "nodejs", "node.js", "django", "flask",
                  "full stack", "fullstack", "full stack", "backend",
                  "back end", "back-end", "software developer",
@@ -87,14 +86,26 @@ def extract_jobs(url):
 
     jobs = []
 
-    for link in site_data.find_all("a"):
-        if link.text is not None and any(
-            keyword in link.text.lower() for keyword in keywords
-        ):
-            job_link = handle_local_links(url, link.get("href"))
-            jobs.append({
-                "title": link.text,
-                "url": job_link,
-            })
+    try:
+        site_data = soupify_website(url)
+    except Exception as e:
+        pass
+    else:
+        for link in site_data.find_all("a"):
+            if link.text is not None and any(
+                keyword in link.text.lower() for keyword in keywords
+            ):
+
+                if link.get("href") is not None:
+                    job_link = handle_local_links(url, link.get("href"))
+
+                    jobs.append({
+                        "title": link.text.strip(),
+                        "url": job_link,
+                    })
+                else:
+                    continue
+            else:
+                continue
 
     return jobs
