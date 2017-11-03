@@ -217,9 +217,6 @@ if __name__ == "__main__":
                 pool.map(get_all_software_jobs_links, startups_with_open_jobs)
             ))
 
-        print(startups_hiring_devs)
-        break
-        # cleanup all the None values
         # insert many using pymongo
         # print(filename, len(startups_hiring_devs))
 
