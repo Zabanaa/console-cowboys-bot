@@ -193,13 +193,14 @@ if __name__ == "__main__":
 
         with open(file_path, "rb") as hiring_startups_file:
 
+            logger.info(
+                "Loading list of startups with open jobs in {}".format(
+                    city
+                )
+            )
+
             while True:
 
-                logger.info(
-                    "Loading list of startups with open jobs in {}".format(
-                        city
-                    )
-                )
                 try:
                     startup = pickle.load(hiring_startups_file)
                     startups_with_open_jobs.append(startup)
