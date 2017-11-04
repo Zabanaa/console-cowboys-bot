@@ -4,7 +4,7 @@ import pickle
 import sys
 import helpers
 import logging
-from db import connect, insert_jobs
+from db import JobsDB
 
 logger          = logging.getLogger("main")
 logger.setLevel(logging.INFO)
@@ -28,6 +28,7 @@ DB_NAME             = os.getenv("CONSOLE_COWBOYS_MONGO_NAME")
 
 
 def save_hiring_startup(startup_info):
+
 
     startup_name     = startup_info["name"]
     startup_url      = startup_info["url"]
@@ -141,6 +142,9 @@ if __name__ == "__main__":
 
     sys.setrecursionlimit(1000)
 
+    db = JobsDB(DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME)
+    db.connect()
+
     if not os.path.exists(CITIES_URLS_FILE):
         get_all_cities()
 
@@ -183,16 +187,11 @@ if __name__ == "__main__":
             with multiprocessing.Pool() as pool:
                 pool.map(save_hiring_startup, startup_list)
 
-    logger.info("Done checking startups for open jobs")
+        logger.info("Done checking startups for open jobs")
 
     logger.info("Found hiring_startups directory. Loading files ...")
 
     hiring_startups_files = [file for file in os.listdir(HIRING_STARTUPS_DIR)]
-
-    try:
-        db_conn = connect(DB_USER, DB_PASS, DB_HOST, int(DB_PORT), DB_NAME)
-    except Exception as e:
-        logger.info(e)
 
     for filename in hiring_startups_files:
 
@@ -236,7 +235,7 @@ if __name__ == "__main__":
             )
 
         # insert many using pymongo
-        jobs_inserted = insert_jobs(db_conn, startups_hiring_devs)
+        jobs_inserted = db.insert_jobs(startups_hiring_devs)
         logger.info("Inserted {} jobs in the database".format(
             len(jobs_inserted)
         ))
