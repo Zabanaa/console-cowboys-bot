@@ -1,10 +1,13 @@
 from urllib.parse import urlparse
 import re
 import os
+import logging
+import sys
 
 import requests
 from bs4 import BeautifulSoup
 
+logger = logging.getLogger(__name__)
 
 def extract_city_name(url):
     full_url = urlparse(url)
@@ -52,12 +55,12 @@ def soupify_website(site_url):
         sauce = requests.get(site_url, timeout=5).text
     except requests.exceptions.RequestException as e:
         raise Exception("Couldn't load {}".format(site_url))
+        logger.error("Couldn't load {}".format(site_url))
     else:
         return BeautifulSoup(sauce, "html.parser")
 
 
 def handle_local_links(url, link):
-    # if link is local, prepend the url, else return the link as is
     pattern = re.compile(r"https?://[a-zA-Z0-9-.]*\.[a-zA-Z]+")
     main_url     = pattern.findall(url)[0]
 
@@ -89,7 +92,7 @@ def extract_software_job_links(url):
     try:
         site_data = soupify_website(url)
     except Exception as e:
-        pass
+        logger.error("{} is unreachable".format(url))
     else:
         for link in site_data.find_all("a"):
             if link.text is not None and any(

@@ -6,14 +6,12 @@ import helpers
 import logging
 from db import JobsDB
 
+logging.basicConfig(
+                level=logging.INFO,
+                filename="startups.log",
+                format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                )
 logger          = logging.getLogger("main")
-logger.setLevel(logging.INFO)
-file_handler    = logging.FileHandler("startups.log")
-formatter       = logging.Formatter(
-                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
 
 CWD = os.getcwd()
 STARTUPS_INFO_DIR   = os.path.join(CWD, "startups_info")
@@ -39,33 +37,34 @@ def save_hiring_startup(startup_info):
                             "{}.pkl".format(location)
                         )
 
-    try:
-        site_data = helpers.soupify_website(startup_url)
-    except Exception as e:
-        logger.error(e)
-    else:
-        # check if startup has a jobs page
-        links = [link.get("href") for link in site_data.find_all("a")]
+    site_data = helpers.soupify_website(startup_url)
+    # check if startup has a jobs page
+    links = [link.get("href") for link in site_data.find_all("a")]
 
-        has_jobs_page, jobs_page_url = helpers.startup_has_jobs_page(links)
+    has_jobs_page, jobs_page_url = helpers.startup_has_jobs_page(links)
 
-        if has_jobs_page:
-            jobs_page = helpers.handle_local_links(startup_url, jobs_page_url)
-            startup_info["jobs_page"] = jobs_page
+    if has_jobs_page:
+        jobs_page = helpers.handle_local_links(startup_url, jobs_page_url)
+        startup_info["jobs_page"] = jobs_page
 
-            logger.info("{} is hiring. More info at {}".format(
-                startup_name,
-                startup_info["jobs_page"]
-            ))
+        logger.info("{} is hiring. More info at {}".format(
+            startup_name,
+            startup_info["jobs_page"]
+        ))
 
-            with open(hiring_file_path, "ab") as file:
-                pickle.dump(startup_info, file)
+        with open(hiring_file_path, "ab") as file:
+            pickle.dump(startup_info, file)
 
 
 def get_all_software_jobs_links(startup_info):
     jobs_page   = startup_info["jobs_page"]
     jobs_links  = helpers.extract_software_job_links(jobs_page)
+    print("{} - {}".format(startup_info["location"], jobs_page))
     if len(jobs_links) > 0:
+        logger.info("{} is hiring devs in {}".format(
+            startup_info["name"],
+            startup_info["location"],
+        ))
         startup_info["job_listing_urls"] = jobs_links
         return startup_info
 
@@ -234,10 +233,6 @@ if __name__ == "__main__":
                 )
             )
 
-        # insert many using pymongo
-        jobs_inserted = db.insert_jobs(startups_hiring_devs)
-        logger.info("Inserted {} jobs in the database".format(
-            len(jobs_inserted)
-        ))
+        db.insert_jobs(startups_hiring_devs, city)
 
     logger.info("Finished")

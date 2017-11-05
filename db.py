@@ -1,6 +1,10 @@
+import logging
+import sys
+
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure, ServerSelectionTimeoutError
 
+logger = logging.getLogger(__name__)
 
 class JobsDB(object):
 
@@ -15,33 +19,45 @@ class JobsDB(object):
 
         # 1 - Establish a connection to the MongoDB server
 
+        logger.info("Attempting connection to MongoDB server ...")
+
         try:
             client = MongoClient(host=self.host, port=self.port)
         except TypeError as e:
-            # This should be logged instead
-            print("Error: {}".format(e))
+            logger.error("Error: {}".format(e))
             return
         else:
             self.db = client[self.dbname]
 
+        logger.info("Connection to MongoDB server established !")
+
         # 2 - Authenticate user using passed credentials
+
+        logger.info("Logging into the database ...")
 
         try:
             self.db.authenticate(name=self.user, password=self.password)
         except OperationFailure as e:
             error = e.details["errmsg"]
             message = "Please ensure that the credentials passed are valid."
-            raise Exception("{} {}".format(error, message))
+            logger.error("{} {}".format(error, message))
+            sys.exit()
         except ServerSelectionTimeoutError as e:
-            print("Connection Error. Please check the host and port.")
+            logger.error("Connection Error. Please check the host and port.")
+            sys.exit()
         else:
+            logger.info("Connected to the database !")
             return self.db
 
-    def insert_jobs(self, jobs_list):
+    def insert_jobs(self, jobs_list, city):
 
         try:
+            logger.info("Inserting {} startups jobs".format(city))
             jobs_inserted = self.db.jobs.insert_many(jobs_list)
         except Exception as e:
-            raise Exception("Error inserting jobs. Reason: {}".format(e))
+            logger.error("Error inserting jobs. Reason: {}".format(e))
+            sys.exit()
         else:
-            return jobs_inserted.inserted_ids
+            logger.info("Inserted {} jobs in the database.".format(
+                len(jobs_inserted.inserted_ids)
+            ))
