@@ -8,6 +8,11 @@ logger = logging.getLogger(__name__)
 
 class JobsDB(object):
 
+    """
+    This class will be used to connect to MongoDB, authenticate to a database
+    and insert jobs in it.
+    """
+
     def __init__(self, user, password, host, port, dbname):
         self.user = user
         self.password = password
@@ -50,6 +55,11 @@ class JobsDB(object):
             return self.db
 
     def insert_jobs(self, jobs_list, city):
+
+        """
+        Attempts to insert the jobs_list in the databse calling insert_many
+        Exits on failure.
+        """
 
         try:
             logger.info("Inserting {} startups jobs".format(city))
