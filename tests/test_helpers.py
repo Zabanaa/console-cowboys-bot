@@ -53,13 +53,24 @@ class TestHelpers(object):
         final_link = helpers.handle_local_links(url, local_link)
         assert final_link == url + "/" +local_link
 
+    # These tests will require mocking of either request or BeautifulSoup
     def test_soupify_website(self):
         pass
 
-    # These tests will require mocking of either request or BeautifulSoup
-    def test_startup_has_jobs(self):
-        pass
+    def test_startup_has_jobs_page(self):
+        links = ["http://site.com/careers", "http://site.com/contact"]
+        has_page, link = helpers.startup_has_jobs_page(links)
+        assert has_page == True
+        assert link == links[0]
+        print("Done")
+
+        links = ["http://site.com/preview", "http://site.com/contact"]
+        has_page, link = helpers.startup_has_jobs_page(links)
+        assert has_page == False
+        assert link == None
+
 
     def test_extract_software_jobs_links(self):
+        # refactor function with dependency ejection ?
         # assert function called soupify_website with the correct url
         pass
