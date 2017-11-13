@@ -13,12 +13,13 @@ class JobsDB(object):
     and insert jobs in it.
     """
 
-    def __init__(self, user, password, host, port, dbname):
+    def __init__(self, user, password, host, port, dbname, timeout):
         self.user = user
         self.password = password
         self.host = host
         self.port = int(port)
         self.dbname = dbname
+        self.timeout = timeout
 
     def connect(self):
 
@@ -27,7 +28,11 @@ class JobsDB(object):
         logger.info("Attempting connection to MongoDB server ...")
 
         try:
-            client = MongoClient(host=self.host, port=self.port)
+            client = MongoClient(
+                            host=self.host,
+                            port=self.port,
+                            serverSelectionTimeoutMS=self.timeout,
+            )
         except TypeError as e:
             logger.error("Error: {}".format(e))
             return
@@ -46,10 +51,11 @@ class JobsDB(object):
             error = e.details["errmsg"]
             message = "Please ensure that the credentials passed are valid."
             logger.error("{} {}".format(error, message))
-            sys.exit()
+            sys.exit("Error connecting. Please ensure credentials are valid.")
         except ServerSelectionTimeoutError as e:
-            logger.error("Connection Error. Please check the host and port.")
-            sys.exit()
+            message = "Connection Error. Please check the host and port."
+            logger.error(message)
+            sys.exit(message)
         else:
             logger.info("Connected to the database !")
             return self.db
@@ -71,3 +77,4 @@ class JobsDB(object):
             logger.info("Inserted {} jobs in the database.".format(
                 len(jobs_inserted.inserted_ids)
             ))
+            return jobs_inserted.inserted_ids
