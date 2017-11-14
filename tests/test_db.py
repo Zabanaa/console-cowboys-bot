@@ -20,7 +20,11 @@ class TestDB(object):
         self.connection = self.db.connect()
 
     def teardown_method(self):
+        """
+        Close DB connection and drop collections
+        """
         self.connection.client.close()
+        self.connection.jobs.drop()
 
     def test_create_connection(self):
         assert isinstance(self.connection, MongoDatabase)
